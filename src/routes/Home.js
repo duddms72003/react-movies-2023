@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Movie from "../components/Movie";
 
 function Home() {
   const [loading, setLoading] = useState(true);
-  const [movies, setMovies] = useState([]);
+  const [characters, setCharacters] = useState([]);
   const [animationPaused, setAnimationPaused] = useState(false);
 
   const handleMouseEnter = () => {
@@ -14,19 +15,21 @@ function Home() {
     setAnimationPaused(false);
   };
 
-  const getMovies = async () => {
-    const json = await (
-      await fetch(
-        // `https://yts.mx/api/v2/list_movies.json?minimum_rating=9&sort_by=download_count`
-        `https://yts.mx/api/v2/list_movies.json?limit=12&sort_by=download_count`
-      )
-    ).json();
-    setMovies(json.data.movies);
-    setLoading(false);
-    // console.log(json);
-  };
   useEffect(() => {
-    getMovies();
+    const fetchCharacters = async () => {
+      try {
+        const response = await axios.get(
+          "https://marvel-proxy.nomadcoders.workers.dev/v1/public/characters?limit=13&orderBy=modified&series=24229,1058,2023"
+        );
+        setCharacters(response.data.data.results);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching characters:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchCharacters();
   }, []);
 
   return (
@@ -43,14 +46,12 @@ function Home() {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            {movies.map((movie) => (
+            {characters.map((character) => (
               <Movie
-                key={movie.id}
-                id={movie.id}
-                coverImage={movie.medium_cover_image}
-                title={movie.title}
-                summary={movie.summary}
-                genres={movie.genres}
+                key={character.id}
+                id={character.id}
+                coverImage={`${character.thumbnail.path}.${character.thumbnail.extension}`}
+                title={character.name}
               />
             ))}
           </div>

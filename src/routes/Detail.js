@@ -1,23 +1,30 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import axios from "axios";
 
 function Detail() {
   const { id } = useParams();
-
   const [loading, setLoading] = useState(true);
-  const [detail, setDetail] = useState([]);
-
-  const getMovie = async () => {
-    const json = await (
-      await fetch(`https://yts.mx/api/v2/movie_details.json?movie_id=${id}`)
-    ).json();
-    setDetail(json.data.movie);
-    setLoading(false);
-  };
+  const [character, setCharacter] = useState({});
 
   useEffect(() => {
-    getMovie();
-  }, []);
+    const fetchCharacterDetail = async () => {
+      try {
+        const response = await axios.get(
+          `https://marvel-proxy.nomadcoders.workers.dev/v1/public/characters/${id}`
+        );
+        setCharacter(response.data.data.results[0]);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching character detail:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchCharacterDetail();
+  }, [id]);
+
+  console.log(character); // 데이터 확인
 
   return (
     <div>
@@ -26,22 +33,11 @@ function Detail() {
       ) : (
         <div className="container">
           <img
-            className="movie_detail_bg"
-            src={detail.background_image_original}
-          ></img>
-          <img
             className="movie_detail_img"
-            src={detail.large_cover_image}
-          ></img>
-          <p className="movie_detail_title">{detail.title}</p>
-          <p className="movie_detail_intro">{detail.description_intro}</p>
-          <p>
-            <span>{detail.year} / </span>
-            <span>{detail.runtime}min</span>
-          </p>
-          <ul className="movie_detail_genres">
-            {detail.genres && detail.genres.map((g) => <li key={g}>{g}</li>)}
-          </ul>
+            src={`${character.thumbnail.path}.${character.thumbnail.extension}`}
+            alt={character.name}
+          />
+          <p className="movie_detail_title">{character.name}</p>
         </div>
       )}
     </div>
